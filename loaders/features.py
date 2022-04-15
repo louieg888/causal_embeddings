@@ -9,7 +9,7 @@ import torch
 PATH_TO_TABULAR = '../datasets/participants.tsv'
 PATH_TO_IMAGES = '../datasets/midaxial_2D'
 
-IMAGE_DIMENSIONS = (16, 16)
+IMAGE_DIMENSIONS = (176, 216)
 
 # each sample is a list consisting of [obs_data_dict, image]
 class CausalEmbeddingsDataset(torch.utils.data.Dataset):
