@@ -10,7 +10,7 @@ from utils import compute_total_loss
 from os import mkdir
 
 def save_checkpoint(state, is_best, filepath):
-    if not os.filepath.exists(filepath):
+    if not os.path.exists(filepath):
         mkdir(filepath)
 
     torch.save(state, os.path.join(filepath, 'flow_ckpt.pth.tar'))
