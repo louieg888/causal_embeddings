@@ -27,12 +27,13 @@ class TestBasicAutoencoderUsage:
 
         model.load_state_dict(torch.load(BEST_MODEL_PATH)['state_dict'])
 
-        for images, obs_dict, id in data_loader:
+        for images, obs_dict, ids in data_loader:
             recon_images, embeddings = model(images)
 
             for i in range(batch_size):
+                id = ids[i].item()
                 min_val, max_val = min_max_dict['image'][id]
-                recon_image = (recon_images[i] + min_val) * (max_val - min_val)
+                recon_image = (recon_images[i] *  (max_val - min_val)) + min_val
                 plt.imshow(images[i].detach().numpy().reshape((32,32)))
                 plt.imshow(recon_image.detach().numpy().reshape((32,32)))
 

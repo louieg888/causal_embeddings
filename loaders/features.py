@@ -59,7 +59,7 @@ class CausalEmbeddingsDataset(torch.utils.data.Dataset):
             self.column_range[col_name] = (_min, _max)
             dfs.append(df)
 
-        dfs.append(participants['participant_id'])
+        dfs.append(participants['participant_id'].astype(int))
         self.tabular_df = pd.concat(dfs, axis=1)
         self.column_range['image'] = self.get_image_normalization_coefficients()
 
@@ -101,13 +101,13 @@ class CausalEmbeddingsDataset(torch.utils.data.Dataset):
         return len(self.tabular_df)
 
     def __getitem__(self, idx):
-        id = self.tabular_df.iloc[idx]['participant_id']
+        id = self.tabular_df['participant_id'].iloc[idx]
         image = self.get_transformed_image(idx, id)
         tab_values = self.tabular_df.drop(columns=['participant_id']).iloc[idx]
 
         final_tab_values = {}
         for name, group in self.param_groups.items():
-            consolidated_vec = torch.tensor([tab_values[column] for column in group]).float()
+            consolidated_vec = torch.tensor([tab_values[column] for column in group])
             final_tab_values[name] = consolidated_vec
 
         return torch.tensor(image, dtype=torch.float), final_tab_values, id
