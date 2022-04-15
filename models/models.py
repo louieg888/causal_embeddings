@@ -168,7 +168,7 @@ if __name__ == "__main__":
     conv_ae = ConvolutionalAE(dataset.schema)
     data_loader = torch.utils.data.DataLoader(dataset, batch_size=16, shuffle=True)
 
-    for images, obs_dict in data_loader:
+    for images, obs_dict, _ in data_loader:
         res = conv_ae(obs_dict, images)
 
 

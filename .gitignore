@@ -2,3 +2,4 @@
 .idea/
 datasets/*
 logs/*
+*pycache*

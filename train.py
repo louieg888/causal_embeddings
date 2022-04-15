@@ -20,7 +20,7 @@ def test(model, test_loader):
     test_loss = 0.
     for sample in test_loader:
         with torch.no_grad():
-            images, labels = sample
+            images, labels, _ = sample
             pred_images, image_emb = model(images)
             test_loss += loss_fn(images, pred_images)
 
@@ -33,7 +33,7 @@ def train(model, optimizer, train_loader, epoch, batch_size):
     loss_fn = torch.nn.MSELoss()
     for batch_idx, sample in enumerate(train_loader):
         optimizer.zero_grad()
-        images, obs_dict = sample
+        images, obs_dict, _ = sample
         pred_images, image_emb = model(images)
         loss = loss_fn(images, pred_images)
         #loss = compute_total_loss(images, obs_dict, model)
@@ -67,18 +67,18 @@ if __name__ == '__main__':
 
     optimizer = torch.optim.Adam(model.parameters())
 
-    best_loss = -100.
+    best_loss = 100.
     start_time = time.time()
     for epoch in range(num_epochs):
         train(model, optimizer, train_loader, epoch, batch_size)
         loss = test(model, test_loader)
         is_best = loss > best_loss
-        best_loss = max(loss, best_loss)
+        best_loss = min(loss, best_loss)
         save_checkpoint({
             'epoch': epoch + 1,
             'state_dict': model.state_dict(),
             'best_loss': best_loss,
             'optimizer': optimizer.state_dict()
-        }, is_best, filepath='../logs')
+        }, is_best, filepath='logs')
 
 
