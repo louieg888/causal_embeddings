@@ -1,15 +1,13 @@
-import cv2
 import functools
 import numpy as np
 import os
 import pandas as pd
-import pickle
 
 import skimage
 import torch
 
 PATH_TO_TABULAR = '../datasets/participants.tsv'
-PATH_TO_IMAGES = '../datasets/gstore/scratch/u/iriondoc/BHB_data/midaxial_2D'
+PATH_TO_IMAGES = '../datasets/midaxial_2D'
 
 # each sample is a list consisting of [obs_data_dict, image]
 class CausalEmbeddingsDataset(torch.utils.data.Dataset):
@@ -65,8 +63,8 @@ class CausalEmbeddingsDataset(torch.utils.data.Dataset):
         self.tabular_df = pd.concat(dfs, axis=1)
         self.column_range['image'] = self.get_image_normalization_coefficients()
 
-        with open("../logs/preprocessing.pkl", "wb") as handle:
-            pickle.dump(self.column_range, handle, protocol=pickle.HIGHEST_PROTOCOL)
+        # with open("../logs/preprocessing.pkl", "wb") as handle:
+        #     pickle.dump(self.column_range, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
         self.schema = {key: len(value) for key, value in self.param_groups.items()}
 

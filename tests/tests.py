@@ -14,8 +14,8 @@ class TestBasicAutoencoderUsage:
         batch_size = 16
         data_loader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=True)
 
-        with open('../logs/preprocessing.pkl', 'rb') as handle:
-            min_max_dict = pickle.load(handle)
+        # with open('../logs/preprocessing.pkl', 'rb') as handle:
+        #     min_max_dict = pickle.load(handle)
 
         model = AutoEncoder(
             spatial_dims=2,
@@ -32,10 +32,10 @@ class TestBasicAutoencoderUsage:
 
             for i in range(len(ids)):
                 id = ids[i].item()
-                min_val, max_val = min_max_dict['image'][id]
-                recon_image = (recon_images[i] *  (max_val - min_val)) + min_val
-                plt.imshow(images[i].detach().numpy().reshape((32,32)))
-                plt.imshow(recon_image.detach().numpy().reshape((32,32)))
+                recon_image = recon_images[i]
+                image = images[i]
+                plt.imshow(image.detach().numpy().reshape((176,216)))
+                plt.imshow(recon_image.detach().numpy().reshape((176,216)))
 
 
 
