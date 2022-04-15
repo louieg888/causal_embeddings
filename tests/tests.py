@@ -30,7 +30,7 @@ class TestBasicAutoencoderUsage:
         for images, obs_dict, ids in data_loader:
             recon_images, embeddings = model(images)
 
-            for i in range(batch_size):
+            for i in range(len(ids)):
                 id = ids[i].item()
                 min_val, max_val = min_max_dict['image'][id]
                 recon_image = (recon_images[i] *  (max_val - min_val)) + min_val
