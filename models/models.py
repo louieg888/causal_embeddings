@@ -11,6 +11,8 @@ from scipy.special import expit as sigmoid
 import torch.nn as nn
 from torchsummary import summary
 
+from loaders.features import CausalEmbeddingsDataset
+
 
 class Encoder(nn.Module):
     def __init__(self, encoded_space_dim):
@@ -72,6 +74,7 @@ class Decoder(nn.Module):
 
 class DAG_Layer(nn.Module):
     def __init__(self, schema, max_iter=100, h_tol=1e-8, rho_max=1e16, w_threshold=0.3):
+        super().__init__()
         self.schema = schema
         self.mask = self._mask()
         self.w_est_len = self._get_w_est_len()
@@ -91,7 +94,7 @@ class DAG_Layer(nn.Module):
         """
         Number of non-zero variable entries in W after masking the block diagonal
         """
-        return sum(self.mask)
+        return torch.sum(self.mask).item()
 
     @functools.lru_cache(maxsize=100, typed=False)
     def reconstruct_W(self, w):
@@ -127,7 +130,8 @@ data path:
 
 
 class ConvolutionalAE(nn.Module):
-    def __init__(self, graph, schema, embedding_dim=4):
+    def __init__(self, schema, embedding_dim=4):
+        super().__init__()
         self.encoder = Encoder(embedding_dim)
         self.decoder = Decoder(embedding_dim)
         self.dag_layer = DAG_Layer(schema)
@@ -157,5 +161,14 @@ class ConvolutionalAE(nn.Module):
         X_hat = self.dag_layer(X)
 
         return X, X_hat, pred_ims
+
+
+if __name__ == "__main__":
+    dataset = CausalEmbeddingsDataset()
+    conv_ae = ConvolutionalAE(dataset.schema)
+    data_loader = torch.utils.data.DataLoader(dataset, batch_size=16, shuffle=True)
+
+    for images, obs_dict in data_loader:
+        res = conv_ae(obs_dict, images)
 
 

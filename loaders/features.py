@@ -1,9 +1,9 @@
+import cv2
 import functools
-import pickle
-
 import numpy as np
 import os
 import pandas as pd
+import pickle
 import torch
 
 PATH_TO_TABULAR = 'datasets/participants.tsv'
@@ -33,7 +33,7 @@ class CausalEmbeddingsDataset(torch.utils.data.Dataset):
     }
 
     def __init__(self):
-        tab_path = os.path.join("..", PATH_TO_TABULAR)
+        tab_path = PATH_TO_TABULAR
         participants = pd.read_csv(tab_path, sep='\t')
 
         # filter stages
@@ -61,10 +61,10 @@ class CausalEmbeddingsDataset(torch.utils.data.Dataset):
         self.tabular_df = pd.concat(dfs, axis=1)
         self.column_range['image'] = self.get_image_normalization_coefficients()
 
-        with open("../logs/preprocessing.pkl", "wb") as handle:
+        with open("logs/preprocessing.pkl", "wb") as handle:
             pickle.dump(self.column_range, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
-        self.schema = {key: sum(value) for key, value in self.param_groups.items()}
+        self.schema = {key: len(value) for key, value in self.param_groups.items()}
 
     def get_image_normalization_coefficients(self):
         min_val, max_val = torch.inf, -torch.inf
@@ -78,16 +78,20 @@ class CausalEmbeddingsDataset(torch.utils.data.Dataset):
 
     def get_original_image(self, id):
         image_name = "sub-" + str(id) + '_preproc-quasiraw_T1w.npy'
-        image_path = os.path.join("..", PATH_TO_IMAGES, image_name)
-        return np.load(image_path)
+        image_path = os.path.join(PATH_TO_IMAGES, image_name)
+        image = np.load(image_path)
+        image = cv2.resize(image, (32,32))
+        return image
 
     @functools.lru_cache(maxsize=250, typed=False)
     def get_transformed_image(self, idx):
         image_name = "sub-" + str(int(self.tabular_df.iloc[idx]['participant_id'])) + '_preproc-quasiraw_T1w.npy'
-        image_path = os.path.join("..", PATH_TO_IMAGES, image_name)
+        image_path = os.path.join(PATH_TO_IMAGES, image_name)
         min_val, max_val = self.column_range['image'][0], self.column_range['image'][1]
         _range = max_val - min_val
-        transformed_image = (np.load(image_path) - min_val) / _range
+        image = np.load(image_path)
+        image = cv2.resize(image, (32,32))
+        transformed_image = (image - min_val) / _range
 
         return transformed_image.reshape((1, *transformed_image.shape))
 
@@ -100,15 +104,15 @@ class CausalEmbeddingsDataset(torch.utils.data.Dataset):
 
         final_tab_values = {}
         for name, group in self.param_groups.items():
-            consolidated_vec = torch.tensor([tab_values[column] for column in group])
+            consolidated_vec = torch.tensor([tab_values[column] for column in group]).float()
             final_tab_values[name] = consolidated_vec
 
-        return image, final_tab_values
+        return torch.tensor(image, dtype=torch.float), final_tab_values
 
 
 if __name__ == '__main__':
     dataset = CausalEmbeddingsDataset()
-    data_loader = torch.utils.data.DataLoader(dataset, batch_size=4, shuffle=True)
+    data_loader = torch.utils.data.DataLoader(dataset, batch_size=16, shuffle=True)
 
     for imgs, labels in data_loader:
         print("Batch of images has shape: ", imgs.shape)
