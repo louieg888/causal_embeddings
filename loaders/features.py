@@ -4,6 +4,8 @@ import numpy as np
 import os
 import pandas as pd
 import pickle
+
+import skimage
 import torch
 
 PATH_TO_TABULAR = '../datasets/participants.tsv'
@@ -81,7 +83,7 @@ class CausalEmbeddingsDataset(torch.utils.data.Dataset):
         dirname = os.path.dirname(__file__)
         image_path = os.path.join(dirname, PATH_TO_IMAGES, image_name)
         image = np.load(image_path)
-        image = cv2.resize(image, (32,32))
+        image = skimage.resize(image, (176,216))
         return image
 
     @functools.lru_cache(maxsize=250, typed=False)
@@ -92,7 +94,7 @@ class CausalEmbeddingsDataset(torch.utils.data.Dataset):
         min_val, max_val = self.column_range['image'][id][0], self.column_range['image'][id][1]
         _range = max_val - min_val
         image = np.load(image_path)
-        image = cv2.resize(image, (32,32))
+        image = skimage.resize(image, (176,216))
         transformed_image = (image - min_val) / _range
 
         return transformed_image.reshape((1, *transformed_image.shape))
