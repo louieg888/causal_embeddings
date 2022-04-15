@@ -3,7 +3,7 @@ import pickle
 import torch
 
 
-from loaders.features import CausalEmbeddingsDataset
+from loaders.features import CausalEmbeddingsDataset, IMAGE_DIMENSIONS
 from models.autoencoder import AutoEncoder
 
 BEST_MODEL_PATH = '../logs/flow_best.pth.tar'
@@ -34,8 +34,8 @@ class TestBasicAutoencoderUsage:
                 id = ids[i].item()
                 recon_image = recon_images[i]
                 image = images[i]
-                plt.imshow(image.detach().numpy().reshape((176,216)))
-                plt.imshow(recon_image.detach().numpy().reshape((176,216)))
+                plt.imshow(image.detach().numpy().reshape(IMAGE_DIMENSIONS))
+                plt.imshow(recon_image.detach().numpy().reshape(IMAGE_DIMENSIONS))
 
 
 

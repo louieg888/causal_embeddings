@@ -9,6 +9,8 @@ import torch
 PATH_TO_TABULAR = '../datasets/participants.tsv'
 PATH_TO_IMAGES = '../datasets/midaxial_2D'
 
+IMAGE_DIMENSIONS = (16, 16)
+
 # each sample is a list consisting of [obs_data_dict, image]
 class CausalEmbeddingsDataset(torch.utils.data.Dataset):
     VARIABLE_TYPES = {
@@ -81,7 +83,7 @@ class CausalEmbeddingsDataset(torch.utils.data.Dataset):
         dirname = os.path.dirname(__file__)
         image_path = os.path.join(dirname, PATH_TO_IMAGES, image_name)
         image = np.load(image_path)
-        image = skimage.transform.resize(image, (176,216))
+        image = skimage.transform.resize(image, IMAGE_DIMENSIONS)
         return image
 
     @functools.lru_cache(maxsize=250, typed=False)
@@ -92,7 +94,7 @@ class CausalEmbeddingsDataset(torch.utils.data.Dataset):
         min_val, max_val = self.column_range['image'][id][0], self.column_range['image'][id][1]
         _range = max_val - min_val
         image = np.load(image_path)
-        image = skimage.transform.resize(image, (176,216))
+        image = skimage.transform.resize(image, IMAGE_DIMENSIONS)
         transformed_image = (image - min_val) / _range
 
         return transformed_image.reshape((1, *transformed_image.shape))
