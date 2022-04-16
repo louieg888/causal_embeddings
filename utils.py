@@ -35,9 +35,9 @@ def f(W, schema):
 
     flattened_index_grid = index_grid.reshape((np.prod(index_grid.size()) // 2, 2))
     f_W_entries = torch.stack([get_sum(entry) for entry in flattened_index_grid])
-    f_W = f_W_entries.reshape(index_grid.size()[:2])
+    f_W = f_W_entries.reshape(index_grid.size()[:2]).to(DEVICE)
 
-    f_W = (1 - torch.eye(f_W.shape[0])) * f_W
+    f_W *= (1 - torch.eye(f_W.shape[0])).to(DEVICE)
 
     return f_W
 
