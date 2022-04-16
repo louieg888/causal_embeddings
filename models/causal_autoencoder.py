@@ -3,6 +3,7 @@ import torch
 from collections import OrderedDict
 from torch import nn
 
+from constants import DEVICE
 from models.autoencoder import AutoEncoder
 from models.models import DAG_Layer
 
@@ -17,8 +18,8 @@ class CausalAutoEncoder(nn.Module):
             out_channels=1,
             spatial_dims=2,
             strides=(2, 2, 2),
-        )
-        self.dag_layer = DAG_Layer(schema)
+        ).to(DEVICE)
+        self.dag_layer = DAG_Layer(schema).to(DEVICE)
         self.embedding_dim = embedding_dim
         self.schema = schema
 
@@ -33,6 +34,7 @@ class CausalAutoEncoder(nn.Module):
         for node_name, node_obs in obs_dict.items():
             X = torch.cat([X, node_obs], axis=1)
 
+        X = X.to(DEVICE)
         X_hat = self.dag_layer(X)
 
         return X, X_hat, recon_images

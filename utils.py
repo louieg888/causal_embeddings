@@ -3,6 +3,9 @@ import math
 import torch
 import numpy as np
 
+from constants import DEVICE
+
+
 def f(W, schema):
     dims = torch.tensor(list(schema.values()))
     dims_cumsum = torch.cumsum(dims, dim=0)
@@ -58,6 +61,7 @@ def acyclicity_loss(dag_layer):
     DAGness, aka no acyclicity is allowed
     """
     def h(W):
+        W = W.to(DEVICE)
         """Evaluate value and gradient of acyclicity constraint."""
         # fW = f(torch.abs(W))
         d = W.shape[0]
@@ -69,7 +73,7 @@ def acyclicity_loss(dag_layer):
         # h = cum_trace - d
         return h
 
-    W_est = dag_layer.reconstruct_W(dag_layer.w_est)
+    W_est = dag_layer.reconstruct_W(dag_layer.w_est).to(DEVICE)
     return h(f(torch.abs(W_est), dag_layer.schema))
 
 
@@ -77,6 +81,8 @@ def local_function_faithfullness_loss(X, dag_layer, B_true=None):
     """
     || X - XW || ^ 2
     """
+    X = X.to(DEVICE)
+
     if B_true is not None:
         X_hat = dag_layer(X)
         diff = X - X_hat

@@ -8,7 +8,7 @@ import pandas as pd
 import skimage
 import torch
 
-from constants import EMBEDDING_DIMENSION
+from constants import EMBEDDING_DIMENSION, DEVICE
 
 PATH_TO_TABULAR = '../datasets/participants.tsv'
 PATH_TO_IMAGES = '../datasets/midaxial_2D'
@@ -116,10 +116,10 @@ class CausalEmbeddingsDataset(torch.utils.data.Dataset):
 
         final_tab_values = {}
         for name, group in self.param_groups.items():
-            consolidated_vec = torch.tensor([tab_values[column] for column in group])
+            consolidated_vec = torch.tensor([tab_values[column] for column in group]).to(DEVICE)
             final_tab_values[name] = consolidated_vec
 
-        return torch.tensor(image, dtype=torch.float), final_tab_values, id
+        return torch.tensor(image, dtype=torch.float).to(DEVICE), final_tab_values, id
 
 
 if __name__ == '__main__':

@@ -45,7 +45,7 @@ def train(model, optimizer, train_loader, epoch, batch_size):
         # (gamma) image reconstruction: 1e6
         # (rho) faithfulness: ~1
         loss = loss_fn(images, obs_dict, model, B_TRUE, use_ground_truth=True,
-            alpha=0,beta=0,gamma=1,rho=0)
+            alpha=0.00000001,beta=0.01,gamma=0.00001,rho=1)
         loss.backward(retain_graph=True)
         optimizer.step()
         print('Epoch ' + str(epoch))
@@ -70,9 +70,8 @@ if __name__ == '__main__':
     model = CausalAutoEncoder(
         dataset.schema,
         embedding_dim=8
-    )
+    ).to(DEVICE)
 
-    model.to(DEVICE)
 
     optimizer = torch.optim.Adam(model.parameters())
 
