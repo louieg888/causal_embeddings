@@ -1,10 +1,14 @@
 import functools
+from collections import OrderedDict
+
 import numpy as np
 import os
 import pandas as pd
 
 import skimage
 import torch
+
+from constants import EMBEDDING_DIMENSION
 
 PATH_TO_TABULAR = '../datasets/participants.tsv'
 PATH_TO_IMAGES = '../datasets/midaxial_2D'
@@ -20,19 +24,20 @@ class CausalEmbeddingsDataset(torch.utils.data.Dataset):
         ],
         "continuous": [
             'age',
-            'wmv',
-            'gmv',
-            'csfv',
-            'tiv'
+            #'wmv',
+            #'gmv',
+            #'csfv',
+            #'tiv'
         ]
     }
 
-    param_groups = {
-        'roi': ['wmv','gmv','csfv','tiv'],
-        'age': ['age'],
-        'sex': ['female', 'male'],
-        'study': ['study_' + str(val) for val in [1,2,3,4,6,8,9,10]],
-    }
+    param_groups = OrderedDict([
+        ('age', ['age']),
+        ('sex', ['female']),
+        ('study', ['study_' + str(val) for val in [1, 2, 3, 4, 6, 8, 9, 10]]),
+    ])
+        #'roi': ['wmv','gmv','csfv','tiv'],
+
 
     def __init__(self):
         dirname = os.path.dirname(__file__)
@@ -68,7 +73,9 @@ class CausalEmbeddingsDataset(torch.utils.data.Dataset):
         # with open("../logs/preprocessing.pkl", "wb") as handle:
         #     pickle.dump(self.column_range, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
-        self.schema = {key: len(value) for key, value in self.param_groups.items()}
+        schema_a = OrderedDict([("image", EMBEDDING_DIMENSION)])
+        schema_b = OrderedDict([(key, len(value)) for key, value in self.param_groups.items()])
+        self.schema = OrderedDict(list(schema_a.items()) + list(schema_b.items()))
 
     def get_image_normalization_coefficients(self):
         min_max_dict = {}

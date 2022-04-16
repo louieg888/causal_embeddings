@@ -79,7 +79,8 @@ class DAG_Layer(nn.Module):
         self.mask = self._mask()
         self.w_est_len = self._get_w_est_len()
         self.d = self.mask.shape[0]
-        self.w_est = torch.zeros(self.w_est_len)
+        self.w_est = torch.normal(0, 0.1, size=(self.w_est_len,))
+        #self.w_est = torch.zeros(self.w_est_len)
         self.w_est.requires_grad = True
 
     def _mask(self):
@@ -94,7 +95,7 @@ class DAG_Layer(nn.Module):
         """
         Number of non-zero variable entries in W after masking the block diagonal
         """
-        return torch.sum(self.mask).item()
+        return int(torch.sum(self.mask).item())
 
     @functools.lru_cache(maxsize=100, typed=False)
     def reconstruct_W(self, w):

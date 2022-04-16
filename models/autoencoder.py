@@ -74,6 +74,7 @@ class AutoEncoder(nn.Module):
             dropout: Optional[Union[Tuple, str, float]] = None,
             bias: bool = True,
             dimensions: Optional[int] = None,
+            embedding_dimension: int = 8,
     ) -> None:
 
         super().__init__()
@@ -92,6 +93,7 @@ class AutoEncoder(nn.Module):
         self.num_inter_units = num_inter_units
         self.inter_channels = inter_channels if inter_channels is not None else []
         self.inter_dilations = list(inter_dilations or [1] * len(self.inter_channels))
+        self.embedding_dimension = embedding_dimension
 
         # The number of channels and strides should match
         if len(channels) != len(strides):
@@ -103,7 +105,7 @@ class AutoEncoder(nn.Module):
         self.encode, self.encoded_channels = self._get_encode_module(self.encoded_channels, channels, strides)
         self.intermediate, self.encoded_channels = self._get_intermediate_module(self.encoded_channels, num_inter_units)
         self.decode, _ = self._get_decode_module(self.encoded_channels, decode_channel_list, strides[::-1] or [1])
-        self.intermediate_linear = nn.Linear(self.encoded_channels, 8)
+        self.intermediate_linear = nn.Linear(self.encoded_channels, self.embedding_dimension)
 
     def _get_encode_module(
             self, in_channels: int, channels: Sequence[int], strides: Sequence[int]
