@@ -1,15 +1,15 @@
 import os
 import shutil
 import time
+from os import mkdir
+
 import torch
 
 from constants import B_TRUE, DEVICE
 from loaders.features import CausalEmbeddingsDataset
-from models.autoencoder import AutoEncoder
 from models.causal_autoencoder import CausalAutoEncoder
-from models.models import ConvolutionalAE
 from utils import compute_total_loss
-from os import mkdir
+
 
 def save_checkpoint(state, is_best, filepath):
     # dirname = os.path.dirname(__file__)

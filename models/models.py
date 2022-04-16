@@ -11,6 +11,7 @@ from scipy.special import expit as sigmoid
 import torch.nn as nn
 from torchsummary import summary
 
+from constants import DEVICE
 from loaders.features import CausalEmbeddingsDataset
 
 
@@ -89,13 +90,13 @@ class DAG_Layer(nn.Module):
         """
         block_matrices = [np.ones((dim, dim)) for dim in list(self.schema.values())]
         f_mask = block_diag(*block_matrices)
-        return torch.tensor(1 - f_mask)
+        return torch.tensor(1 - f_mask).to(DEVICE)
 
     def _get_w_est_len(self):
         """
         Number of non-zero variable entries in W after masking the block diagonal
         """
-        return int(torch.sum(self.mask).item())
+        return int(torch.sum(self.mask.to(DEVICE)).item())
 
     @functools.lru_cache(maxsize=100, typed=False)
     def reconstruct_W(self, w):
@@ -106,10 +107,11 @@ class DAG_Layer(nn.Module):
         nonzero_locations = torch.nonzero(self.mask)
         for ind, tup in enumerate([tuple(val) for val in nonzero_locations]):
             W[tup] = w[ind]
-        return W
+        return W.to(DEVICE)
 
     def forward(self, X):
         # X –> w_est, W_true
+        X = X.to(DEVICE)
         W = self.reconstruct_W(self.w_est)
         return torch.matmul(X, W)
 
