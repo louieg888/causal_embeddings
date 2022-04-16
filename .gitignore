@@ -3,3 +3,4 @@
 datasets/*
 logs/*
 *pycache*
+run_on_spell.sh
