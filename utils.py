@@ -39,7 +39,7 @@ def f(W, schema):
 
     f_W *= (1 - torch.eye(f_W.shape[0])).to(DEVICE)
 
-    return f_W
+    return f_W.to(DEVICE)
 
 
 def ground_truth_W_loss(B_true, dag_layer):
@@ -47,11 +47,11 @@ def ground_truth_W_loss(B_true, dag_layer):
     Penalize relationships that exist that are not supposed to exist.
     encourages sparsity in the weight matrix
     """
-    W_est = dag_layer.reconstruct_W(dag_layer.w_est)
+    W_est = dag_layer.reconstruct_W(dag_layer.w_est).to(DEVICE)
 
     # reconstruct_W
-    W_est_abs = f(torch.abs(W_est), dag_layer.schema)
-    W_est_abs = W_est_abs * (1 - B_true)
+    W_est_abs = f(torch.abs(W_est), dag_layer.schema).to(DEVICE)
+    W_est_abs *= (1 - B_true).to(DEVICE)
     #
     return torch.sum(W_est_abs)
 
