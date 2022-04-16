@@ -73,15 +73,31 @@ def acyclicity_loss(dag_layer):
     return h(f(torch.abs(W_est), dag_layer.schema))
 
 
-def local_function_faithfullness_loss(X, dag_layer):
+def local_function_faithfullness_loss(X, dag_layer, B_true=None):
     """
     || X - XW || ^ 2
     """
-    X_hat = dag_layer(X)
-    diff = X - X_hat
-    return 0.5 / X_hat.shape[0] * torch.sum(diff ** 2)
+    if B_true is not None:
+        X_hat = dag_layer(X)
+        diff = X - X_hat
 
-def compute_total_loss(images, obs_dict, conv_ae, B_true, alpha=1, beta=1, gamma=1, rho=1, use_ground_truth=False):
+        schema_values = list(dag_layer.schema.values())
+        schema_values_cumsum = np.cumsum(schema_values)
+
+        for i in range(B_true.shape[0]):
+            if B_true.sum(axis=0)[i] == 0:
+                end_ind = schema_values_cumsum[i]
+                start_ind = end_ind  - schema_values[i]
+                diff[:,start_ind:end_ind] = 0
+
+        return 0.5 / X_hat.shape[0] * torch.sum(diff ** 2)
+
+    else:
+        X_hat = dag_layer(X)
+        diff = X - X_hat
+        return 0.5 / X_hat.shape[0] * torch.sum(diff ** 2)
+
+def compute_total_loss(images, obs_dict, conv_ae, B_true=None, alpha=1, beta=1, gamma=1, rho=1, use_ground_truth=False):
     X, X_hat, pred_ims = conv_ae(obs_dict, images)
     dag_layer = conv_ae.dag_layer
 
@@ -90,7 +106,7 @@ def compute_total_loss(images, obs_dict, conv_ae, B_true, alpha=1, beta=1, gamma
     else:
         _ground_truth_loss = 0
 
-    _local_function_faithfulness_loss = rho * local_function_faithfullness_loss(X, dag_layer)
+    _local_function_faithfulness_loss = rho * local_function_faithfullness_loss(X, dag_layer, B_true=B_true)
     _acyclicity_loss = alpha * acyclicity_loss(dag_layer)
     _image_recon_loss = gamma * torch.mean((pred_ims - images) ** 2)
 

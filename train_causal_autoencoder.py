@@ -3,7 +3,7 @@ import shutil
 import time
 import torch
 
-from constants import B_TRUE
+from constants import B_TRUE, DEVICE
 from loaders.features import CausalEmbeddingsDataset
 from models.autoencoder import AutoEncoder
 from models.causal_autoencoder import CausalAutoEncoder
@@ -62,6 +62,7 @@ if __name__ == '__main__':
     train_size = int(0.8 * len(dataset))
     test_size = len(dataset) - train_size
     train_dataset, test_dataset = torch.utils.data.random_split(dataset, [train_size, test_size])
+    train_dataset, test_dataset = train_dataset, test_dataset
 
     train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
     test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
@@ -70,6 +71,8 @@ if __name__ == '__main__':
         dataset.schema,
         embedding_dim=8
     )
+
+    model.to(DEVICE)
 
     optimizer = torch.optim.Adam(model.parameters())
 
