@@ -197,7 +197,7 @@ def get_lstsq_loss(args, B, model=None, schema=None):
     train_size = int(0.8 * len(dataset))
     test_size = len(dataset) - train_size
     train_dataset, test_dataset = torch.utils.data.random_split(
-        dataset, [train_size, test_size], generator=torch.Generator().manual_seed(random_seed)
+        dataset, [train_size, test_size], generator=torch.Generator().manual_seed(args.random_seed)
     )
 
     train_loader = torch.utils.data.DataLoader(
