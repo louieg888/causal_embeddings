@@ -4,6 +4,7 @@ import torch
 import numpy as np
 
 from constants import DEVICE
+import spell.metrics as spell_metrics
 
 
 def f(W, schema):
@@ -30,7 +31,7 @@ def f(W, schema):
         loc_x, loc_y = location
         dim_x, dim_y = dimension
 
-        s = torch.sum(W[loc_x - dim_x: loc_x, loc_y - dim_y: loc_y])
+        s = torch.sum(W[loc_x - dim_x : loc_x, loc_y - dim_y : loc_y])
         return s
 
     flattened_index_grid = index_grid.reshape((np.prod(index_grid.size()) // 2, 2))
@@ -60,6 +61,7 @@ def acyclicity_loss(dag_layer):
     """
     DAGness, aka no acyclicity is allowed
     """
+
     def h(W):
         W = W.to(DEVICE)
         """Evaluate value and gradient of acyclicity constraint."""
@@ -93,18 +95,30 @@ def local_function_faithfullness_loss(X, dag_layer, B_true=None):
         for i in range(B_true.shape[0]):
             if B_true.sum(axis=0)[i] == 0:
                 end_ind = schema_values_cumsum[i]
-                start_ind = end_ind  - schema_values[i]
-                diff[:,start_ind:end_ind] = 0
+                start_ind = end_ind - schema_values[i]
+                diff[:, start_ind:end_ind] = 0
 
-        return 0.5 / X_hat.shape[0] * torch.sum(diff ** 2)
+        return 0.5 / X_hat.shape[0] * torch.sum(diff**2)
 
     else:
         X_hat = dag_layer(X)
         diff = X - X_hat
-        return 0.5 / X_hat.shape[0] * torch.sum(diff ** 2)
+        return 0.5 / X_hat.shape[0] * torch.sum(diff**2)
 
-def compute_total_loss(images, obs_dict, conv_ae, B_true=None, alpha=1, beta=1, gamma=1, rho=1, use_ground_truth=False):
+
+def compute_total_loss(
+    images,
+    obs_dict,
+    conv_ae,
+    B_true=None,
+    alpha=1,
+    beta=1,
+    gamma=1,
+    rho=1,
+    use_ground_truth=False,
+):
     X, X_hat, pred_ims = conv_ae(obs_dict, images)
+    
     dag_layer = conv_ae.dag_layer
 
     if use_ground_truth:
@@ -112,7 +126,10 @@ def compute_total_loss(images, obs_dict, conv_ae, B_true=None, alpha=1, beta=1, 
     else:
         _ground_truth_loss = 0
 
-    _local_function_faithfulness_loss = rho * local_function_faithfullness_loss(X, dag_layer, B_true=B_true)
+    _local_function_faithfulness_loss = rho * local_function_faithfullness_loss(
+        X, dag_layer, B_true=B_true
+    )
+
     _acyclicity_loss = alpha * acyclicity_loss(dag_layer)
     _image_recon_loss = gamma * torch.mean((pred_ims - images) ** 2)
 
@@ -123,7 +140,33 @@ def compute_total_loss(images, obs_dict, conv_ae, B_true=None, alpha=1, beta=1, 
     print(f(dag_layer.reconstruct_W(dag_layer.w_est), dag_layer.schema))
     print()
 
-    return _local_function_faithfulness_loss \
-           + _acyclicity_loss \
-           + _ground_truth_loss \
-           + _image_recon_loss
+    spell_metrics.send_metric(
+        "faith_loss",
+        local_function_faithfullness_loss(X, dag_layer, B_true=B_true).item(),
+    )
+    spell_metrics.send_metric(
+        "faith_loss_scaled",
+        (local_function_faithfullness_loss(X, dag_layer, B_true=B_true) * rho).item(),
+    )
+
+    spell_metrics.send_metric("im_loss", torch.mean((pred_ims - images) ** 2).item())
+    spell_metrics.send_metric(
+        "im_loss_scaled", (torch.mean((pred_ims - images) ** 2) * gamma).item()
+    )
+
+    spell_metrics.send_metric("cycle_loss", acyclicity_loss(dag_layer).item())
+    spell_metrics.send_metric(
+        "cycle_loss_scaled", (acyclicity_loss(dag_layer) * alpha).item()
+    )
+
+    spell_metrics.send_metric("GT_loss", ground_truth_W_loss(B_true, dag_layer).item())
+    spell_metrics.send_metric(
+        "GT_loss_scaled", (ground_truth_W_loss(B_true, dag_layer) * beta).item()
+    )
+
+    return (
+        _local_function_faithfulness_loss
+        + _acyclicity_loss
+        + _ground_truth_loss
+        + _image_recon_loss
+    )

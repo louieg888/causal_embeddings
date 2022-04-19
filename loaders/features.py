@@ -10,10 +10,10 @@ import torch
 
 from constants import EMBEDDING_DIMENSION, DEVICE
 
-PATH_TO_TABULAR = '../datasets/participants.tsv'
-PATH_TO_IMAGES = '../datasets/midaxial_2D'
+PATH_TO_TABULAR = '/spell/causal_embeddings/datasets/participants.tsv'
+PATH_TO_IMAGES = '/spell/causal_embeddings/datasets/midaxial_2D'
 
-IMAGE_DIMENSIONS = (176, 216)
+IMAGE_DIMENSIONS = (176, 224) #updated for deeper network (176, 216)
 
 # each sample is a list consisting of [obs_data_dict, image]
 class CausalEmbeddingsDataset(torch.utils.data.Dataset):
@@ -40,9 +40,9 @@ class CausalEmbeddingsDataset(torch.utils.data.Dataset):
 
 
     def __init__(self):
-        dirname = os.path.dirname(__file__)
+#         dirname = os.path.dirname(__file__)
         tab_path = PATH_TO_TABULAR
-        tab_path = os.path.join(dirname, tab_path)
+#         tab_path = os.path.join(dirname, tab_path)
         participants = pd.read_csv(tab_path, sep='\t')
 
         # filter stages
