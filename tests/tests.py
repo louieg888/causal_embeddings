@@ -6,10 +6,11 @@ import pickle
 import numpy as np
 import torch
 
-
+from constants import B_TRUE
 from loaders.features import CausalEmbeddingsDataset, IMAGE_DIMENSIONS
 from models.autoencoder import AutoEncoder
 from models.causal_autoencoder import CausalAutoEncoder
+from utils import run_experiment
 
 BEST_MODEL_PATH = '../logs/flow_best.pth.tar'
 
@@ -149,4 +150,38 @@ class TestDataLoaderReproducibility:
                 for ((old_param_name, old_param_tensor), (new_param_name, new_param_tensor)) in zip(old_params.items(), new_params.items()):
                     assert(old_param_name == new_param_name)
                     assert(torch.equal(old_param_tensor, new_param_tensor))
+
+class TestExperiments:
+    def test_run_experiment_with_missing_entries(self):
+        B_true = B_TRUE
+        B_exp = []
+
+        for i in range(1, 4):
+            tmp_B = torch.clone(B_true)
+            tmp_B[i][0] = 0
+            B_exp.append(tmp_B)
+
+        # https://stackoverflow.com/questions/4984647/accessing-dict-keys-like-an-attribute
+        class AttrDict(dict):
+            def __init__(self, *args, **kwargs):
+                super(AttrDict, self).__init__(*args, **kwargs)
+                self.__dict__ = self
+
+        args = AttrDict({
+            "alpha" : 0.00000001,
+            "beta" : 0.01,
+            "gamma" : 0.00001,
+            "rho" : 1,
+            "epochs" : 1,
+            "patience" : 15,
+            "lr" : 0.001,
+            "batch_size" : 16,
+            "embedding_dimension" : 8,
+            "random_seed" : 42,
+        })
+
+        run_experiment(B_exp, B_true, args)
+
+
+
 
