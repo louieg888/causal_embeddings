@@ -206,7 +206,7 @@ def get_lstsq_loss(args, B, model=None, schema=None):
     )
 
     # just one sample because batch size = len(train_dataset)
-    images, obs_dict, = train_loader[0]
+    images, obs_dict, _ = train_loader[0]
 
     im_embs = model.autoencoder(images)
     lstsq_losses = {}
