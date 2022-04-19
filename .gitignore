@@ -5,3 +5,4 @@ logs/*
 *pycache*
 run_on_spell.sh
 notebooks/.ipynb_checkpoints/
+.env

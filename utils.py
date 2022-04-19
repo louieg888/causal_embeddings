@@ -7,7 +7,6 @@ from constants import DEVICE
 import spell.metrics as spell_metrics
 
 from loaders.features import CausalEmbeddingsDataset
-from train_causal_autoencoder import get_trained_causal_autoencoder
 
 
 def f(W, schema):
@@ -187,6 +186,7 @@ def get_parent_child_relationships(B, schema):
     return relationships
 
 def get_lstsq_loss(args, B, model=None, schema=None):
+    from train_causal_autoencoder import get_trained_causal_autoencoder
     """
     Retrieves the least square losses for all of the parent-emb relations.
     """

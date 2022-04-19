@@ -10,8 +10,8 @@ import torch
 
 from constants import DEVICE
 
-PATH_TO_TABULAR = '../datasets/participants.tsv'
-PATH_TO_IMAGES = '../datasets/midaxial_2D'
+PATH_TO_TABULAR = os.getenv('PATH_TO_TABULAR')
+PATH_TO_IMAGES = os.getenv('PATH_TO_IMAGES')
 
 IMAGE_DIMENSIONS = (176, 224) #updated for deeper network (176, 216)
 
