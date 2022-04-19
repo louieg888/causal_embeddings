@@ -8,10 +8,10 @@ import pandas as pd
 import skimage
 import torch
 
-from constants import EMBEDDING_DIMENSION, DEVICE
+from constants import DEVICE
 
-PATH_TO_TABULAR = '/spell/causal_embeddings/datasets/participants.tsv'
-PATH_TO_IMAGES = '/spell/causal_embeddings/datasets/midaxial_2D'
+PATH_TO_TABULAR = '../datasets/participants.tsv'
+PATH_TO_IMAGES = '../datasets/midaxial_2D'
 
 IMAGE_DIMENSIONS = (176, 224) #updated for deeper network (176, 216)
 
@@ -39,7 +39,7 @@ class CausalEmbeddingsDataset(torch.utils.data.Dataset):
         #'roi': ['wmv','gmv','csfv','tiv'],
 
 
-    def __init__(self):
+    def __init__(self, embedding_dimension=8):
 #         dirname = os.path.dirname(__file__)
         tab_path = PATH_TO_TABULAR
 #         tab_path = os.path.join(dirname, tab_path)
@@ -73,7 +73,7 @@ class CausalEmbeddingsDataset(torch.utils.data.Dataset):
         # with open("../logs/preprocessing.pkl", "wb") as handle:
         #     pickle.dump(self.column_range, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
-        schema_a = OrderedDict([("image", EMBEDDING_DIMENSION)])
+        schema_a = OrderedDict([("image", embedding_dimension)])
         schema_b = OrderedDict([(key, len(value)) for key, value in self.param_groups.items()])
         self.schema = OrderedDict(list(schema_a.items()) + list(schema_b.items()))
 

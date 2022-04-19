@@ -6,6 +6,9 @@ import numpy as np
 from constants import DEVICE
 import spell.metrics as spell_metrics
 
+from loaders.features import CausalEmbeddingsDataset
+from train_causal_autoencoder import get_trained_causal_autoencoder
+
 
 def f(W, schema):
     dims = torch.tensor(list(schema.values()))
@@ -170,3 +173,55 @@ def compute_total_loss(
         + _ground_truth_loss
         + _image_recon_loss
     )
+
+def get_parent_child_relationships(B, schema):
+    nodes = list(schema.keys())
+    d = B.shape[0]
+    relationships = []
+
+    for from_ind in range(d):
+        for to_ind in range(d):
+            if B[from_ind][to_ind]:
+                relationships.append((nodes[from_ind], nodes[to_ind]))
+
+    return relationships
+
+def get_lstsq_loss(args, B, model=None, schema=None):
+    """
+    Retrieves the least square losses for all of the parent-emb relations.
+    """
+    if model is None or schema is None:
+        schema, model = get_trained_causal_autoencoder(args, B)
+
+    dataset = CausalEmbeddingsDataset(embedding_dimension=args.embedding_dimension)
+    train_size = int(0.8 * len(dataset))
+    test_size = len(dataset) - train_size
+    train_dataset, test_dataset = torch.utils.data.random_split(
+        dataset, [train_size, test_size], generator=torch.Generator().manual_seed(random_seed)
+    )
+
+    train_loader = torch.utils.data.DataLoader(
+        train_dataset, batch_size=len(train_dataset), shuffle=True,
+        generator=torch.Generator().manual_seed(args.random_seed)
+    )
+
+    # just one sample because batch size = len(train_dataset)
+    images, obs_dict, = train_loader[0]
+
+    im_embs = model.autoencoder(images)
+    lstsq_losses = {}
+
+    for (parent, child) in get_parent_child_relationships(B, schema):
+        lsq_A = obs_dict[parent]
+        lsq_B = im_embs
+
+        lstsq_errors = torch.linalg.lstsq(lsq_A, lsq_B).residuals
+        lstsq_losses[parent] = 0.5 / len(train_dataset) * torch.norm(lstsq_errors)
+
+    return lstsq_losses
+
+def run_experiment(B_lst, B_true, args):
+    og_losses = (B_true, get_lstsq_loss(args, B_true))
+    other_losses = [(B, get_lstsq_loss(args, B)) for B in B_lst]
+
+    return og_losses, other_losses
